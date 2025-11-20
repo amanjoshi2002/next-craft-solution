@@ -3,6 +3,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { Home, User, Briefcase, Mail } from "lucide-react";
 import ThemeToggler from "./ThemeToggler";
 import menuData from "./menuData";
 
@@ -26,6 +28,20 @@ const Header = () => {
     window.addEventListener("scroll", handleStickyNavbar);
   });
 
+  // Animation trigger
+  const [triggered, setTriggered] = useState(false);
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY >= 80) {
+        setTriggered(true);
+      } else {
+        setTriggered(false);
+      }
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   // submenu handler
   const [openIndex, setOpenIndex] = useState(-1);
   const handleSubmenu = (index) => {
@@ -38,140 +54,215 @@ const Header = () => {
 
   const usePathName = usePathname();
 
+  const leftItems = menuData.slice(0, 2); // Home, About
+  const rightItems = menuData.slice(2, 4); // Projects, Contact
+
+  const itemVariants = {
+    initial: { opacity: 1, rotate: 0 },
+    triggered: { opacity: 0.8, rotate: 2, transition: { type: "spring", stiffness: 100 } }
+  };
+
+  const leftVariants = {
+    initial: { x: -100, y: 0, opacity: 1, rotate: 0 },
+    triggered: { x: 0, y: 60, opacity: 0, rotate: 2, transition: { type: "spring", stiffness: 100 } }
+  };
+
+  const rightVariants = {
+    initial: { x: 100, y: 0, opacity: 1, rotate: 0 },
+    triggered: { x: 0, y: 60, opacity: 0, rotate: 2, transition: { type: "spring", stiffness: 100 } }
+  };
+
+  const logoVariants = {
+    initial: { scale: 1 },
+    triggered: { scale: 1.2, transition: { delay: 0.3, type: "spring", stiffness: 100 } }
+  };
+
+  const hoverProps = {
+    whileHover: {
+      scale: 1.05,
+      y: -5,
+      boxShadow: "0 0 20px rgba(0,255,255,0.6)",
+      transition: { duration: 0.2 }
+    }
+  };
+
   return (
     <>
-      <header
-        className={`header left-0 top-0 z-40 flex w-full items-center ${
-          sticky
-            ? "dark:bg-gray-dark dark:shadow-sticky-dark fixed z-[9999] bg-white !bg-opacity-80 shadow-sticky backdrop-blur-sm transition"
-            : "absolute bg-transparent"
-        }`}
-      >
+      <header>
         <div className="container">
           <div className="relative -mx-4 flex items-center justify-between">
-            <div className="w-60 max-w-full px-4 xl:mr-12">
-              <Link
-                href="/"
-                className={`header-logo block w-full ${
-                  sticky ? "py-5 lg:py-2" : "py-8"
-                } `}
+            {/* Mobile Toggle */}
+            <button
+              onClick={navbarToggleHandler}
+              id="navbarToggler"
+              aria-label="Mobile Menu"
+              className="absolute right-4 top-1/2 block translate-y-[-50%] rounded-lg px-3 py-[6px] ring-primary focus:ring-2 lg:hidden"
+            >
+              <span
+                className={`relative my-1.5 block h-0.5 w-[30px] bg-black transition-all duration-300 dark:bg-white ${
+                  navbarOpen ? "top-[7px] rotate-45" : ""
+                }`}
+              />
+              <span
+                className={`relative my-1.5 block h-0.5 w-[30px] bg-black transition-all duration-300 dark:bg-white ${
+                  navbarOpen ? "opacity-0" : ""
+                }`}
+              />
+              <span
+                className={`relative my-1.5 block h-0.5 w-[30px] bg-black transition-all duration-300 dark:bg-white ${
+                  navbarOpen ? "top-[-8px] -rotate-45" : ""
+                }`}
+              />
+            </button>
+
+            {/* Desktop Nav */}
+            <motion.div
+              className="hidden lg:block fixed left-0 top-0 w-full z-[100]"
+            >
+              <motion.div
+                className="mx-auto mt-2 flex items-center justify-center"
+                style={{ width: '100%' }}
               >
-                <div className="flex items-center gap-2">
-                  <Image
-                    src="/images/logo/logo.png"
-                    alt="logo"
-                    width={40}
-                    height={40}
-                    className="w-auto dark:hidden"
-                    quality={100}
-                    priority
-                  />
-                  <Image
-                    src="/images/logo/logo.png"
-                    alt="logo"
-                    width={40}
-                    height={40}
-                    className="hidden w-auto dark:block"
-                    quality={100}
-                    priority
-                  />
-                  <div className="hidden sm:flex flex-col text-xl font-bold text-dark dark:text-white">
-                    <span>Next Craft</span>
-                    <span>Solution</span>
-                  </div>
-                </div>
-              </Link>
-            </div>
-            <div className="flex w-full items-center justify-between px-4">
+                <motion.div
+                  className="relative"
+                  initial="initial"
+                  animate={triggered ? "triggered" : "initial"}
+                >
+                  <motion.div
+                    className="rounded-2xl backdrop-blur-xl bg-white/10 dark:bg-black/10 border border-white/20 dark:border-white/10 shadow-2xl px-10 min-w-[940px] max-w-[900px] mx-auto flex items-center justify-between"
+                  >
+                    <div className="flex-1 flex justify-end">
+                      <motion.div
+                        className="flex items-center space-x-8"
+                        variants={leftVariants}
+                      >
+                        {leftItems.map((item) => {
+                          const Icon = item.title === "Home" ? Home : User;
+                          return (
+                            <Link
+                              key={item.id}
+                              href={item.path || '/'}
+                              className="flex items-center space-x-2 text-base font-medium text-white"
+                              aria-label={item.title}
+                            >
+                              <Icon className="w-5 h-5 text-white" />
+                              <span>{item.title}</span>
+                            </Link>
+                          );
+                        })}
+                      </motion.div>
+                    </div>
+
+                    <motion.div variants={logoVariants} className="mx-8">
+                      <Link href="/" className="flex items-center gap-3">
+                        <Image
+                          src="/images/logo/logo.png"
+                          alt="logo"
+                          width={48}
+                          height={48}
+                          className="w-auto"
+                          quality={100}
+                          priority
+                        />
+                        <div className="hidden sm:flex flex-col text-2xl font-extrabold text-white font-futuristic tracking-wide">
+                          <span>Next Craft</span>
+                          <span>Solution</span>
+                        </div>
+                      </Link>
+                    </motion.div>
+
+                    <div className="flex-1 flex justify-start">
+                      <motion.div
+                        className="flex items-center space-x-8"
+                        variants={rightVariants}
+                      >
+                        {rightItems.map((item) => {
+                          const Icon = item.title === "Projects" ? Briefcase : Mail;
+                          return (
+                            <Link
+                              key={item.id}
+                              href={item.path || '/'}
+                              className="flex items-center space-x-2 text-base font-medium text-white"
+                              aria-label={item.title}
+                            >
+                              <Icon className="w-5 h-5 text-white" />
+                              <span>{item.title}</span>
+                            </Link>
+                          );
+                        })}
+                      </motion.div>
+                    </div>
+                  </motion.div>
+                </motion.div>
+              </motion.div>
+            </motion.div>
+
+            {/* Mobile Nav */}
+            <nav
+              id="navbarCollapse"
+              className={`navbar absolute right-0 z-30 w-[250px] rounded border-[.5px] border-body-color/50 bg-white px-6 py-4 duration-300 dark:border-body-color/20 dark:bg-dark lg:hidden lg:visible lg:static lg:w-auto lg:border-none lg:!bg-transparent lg:p-0 lg:opacity-100 ${
+                navbarOpen
+                  ? "visibility top-full opacity-100"
+                  : "invisible top-[120%] opacity-0"
+              }`}
+            >
+              <ul className="block lg:flex lg:space-x-8">
+                {menuData.map((menuItem, index) => (
+                  <li key={menuItem.id} className="group relative">
+                    {menuItem.path ? (
+                      <Link
+                        href={menuItem.path || '/'}
+                        className={`flex py-2 text-base font-medium text-dark hover:text-primary dark:text-white/70 dark:hover:text-white ${
+                          usePathName === menuItem.path
+                            ? "text-primary dark:text-white"
+                            : ""
+                        }`} 
+                      >
+                        {menuItem.title}
+                      </Link>
+                    ) : (
+                      <>
+                        <p
+                          onClick={() => handleSubmenu(index)}
+                          className="flex cursor-pointer items-center justify-between py-2 text-base text-dark group-hover:text-primary dark:text-white/70 dark:group-hover:text-white lg:mr-0 lg:inline-flex lg:px-0 lg:py-6"
+                        >
+                          {menuItem.title}
+                          <span className="pl-3">
+                            <svg width="25" height="24" viewBox="0 0 25 24">
+                              <path
+                                fillRule="evenodd"
+                                clipRule="evenodd"
+                                d="M6.29289 8.8427C6.68342 8.45217 7.31658 8.45217 7.70711 8.8427L12 13.1356L16.2929 8.8427C16.6834 8.45217 17.3166 8.45217 17.7071 8.8427C18.0976 9.23322 18.0976 9.86639 17.7071 10.2569L12 15.964L6.29289 10.2569C5.90237 9.86639 5.90237 9.23322 6.29289 8.8427Z"
+                                fill="currentColor"
+                              />
+                            </svg>
+                          </span>
+                        </p>
+                        <div
+                          className={`submenu relative left-0 top-full rounded-sm bg-white transition-[top] duration-300 group-hover:opacity-100 dark:bg-dark lg:invisible lg:absolute lg:top-[110%] lg:block lg:w-[250px] lg:p-4 lg:opacity-0 lg:shadow-lg lg:group-hover:visible lg:group-hover:top-full ${
+                            openIndex === index ? "block" : "hidden"
+                          }`}
+                        >
+                          {menuItem.submenu && menuItem.submenu.map((submenuItem, index) => (
+                            <Link
+                              href={submenuItem.path || '/'}
+                              key={index}
+                              className="block rounded py-2.5 text-sm text-dark hover:text-primary dark:text-white/70 dark:hover:text-white lg:px-3"
+                            >
+                              {submenuItem.title}
+                            </Link>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </nav>
+
+            <div className="flex items-center justify-end pr-16 lg:pr-0">
               <div>
-                <button
-                  onClick={navbarToggleHandler}
-                  id="navbarToggler"
-                  aria-label="Mobile Menu"
-                  className="absolute right-4 top-1/2 block translate-y-[-50%] rounded-lg px-3 py-[6px] ring-primary focus:ring-2 lg:hidden"
-                >
-                  <span
-                    className={`relative my-1.5 block h-0.5 w-[30px] bg-black transition-all duration-300 dark:bg-white ${
-                      navbarOpen ? "top-[7px] rotate-45" : ""
-                    }`}
-                  />
-                  <span
-                    className={`relative my-1.5 block h-0.5 w-[30px] bg-black transition-all duration-300 dark:bg-white ${
-                      navbarOpen ? "opacity-0" : ""
-                    }`}
-                  />
-                  <span
-                    className={`relative my-1.5 block h-0.5 w-[30px] bg-black transition-all duration-300 dark:bg-white ${
-                      navbarOpen ? "top-[-8px] -rotate-45" : ""
-                    }`}
-                  />
-                </button>
-                <nav
-                  id="navbarCollapse"
-                  className={`navbar absolute right-0 z-30 w-[250px] rounded border-[.5px] border-body-color/50 bg-white px-6 py-4 duration-300 dark:border-body-color/20 dark:bg-dark lg:visible lg:static lg:w-auto lg:border-none lg:!bg-transparent lg:p-0 lg:opacity-100 ${
-                    navbarOpen
-                      ? "visibility top-full opacity-100"
-                      : "invisible top-[120%] opacity-0"
-                  }`}
-                >
-                  <ul className="block lg:flex lg:space-x-8">
-                    {menuData.map((menuItem, index) => (
-                      <li key={menuItem.id} className="group relative">
-                        {menuItem.path ? (
-                          <Link
-                            href={menuItem.path}
-                            className={`flex py-2 text-base font-medium text-dark hover:text-primary dark:text-white/70 dark:hover:text-white ${
-                              usePathName === menuItem.path
-                                ? "text-primary dark:text-white"
-                                : ""
-                            }`} 
-                          >
-                            {menuItem.title}
-                          </Link>
-                        ) : (
-                          <>
-                            <p
-                              onClick={() => handleSubmenu(index)}
-                              className="flex cursor-pointer items-center justify-between py-2 text-base text-dark group-hover:text-primary dark:text-white/70 dark:group-hover:text-white lg:mr-0 lg:inline-flex lg:px-0 lg:py-6"
-                            >
-                              {menuItem.title}
-                              <span className="pl-3">
-                                <svg width="25" height="24" viewBox="0 0 25 24">
-                                  <path
-                                    fillRule="evenodd"
-                                    clipRule="evenodd"
-                                    d="M6.29289 8.8427C6.68342 8.45217 7.31658 8.45217 7.70711 8.8427L12 13.1356L16.2929 8.8427C16.6834 8.45217 17.3166 8.45217 17.7071 8.8427C18.0976 9.23322 18.0976 9.86639 17.7071 10.2569L12 15.964L6.29289 10.2569C5.90237 9.86639 5.90237 9.23322 6.29289 8.8427Z"
-                                    fill="currentColor"
-                                  />
-                                </svg>
-                              </span>
-                            </p>
-                            <div
-                              className={`submenu relative left-0 top-full rounded-sm bg-white transition-[top] duration-300 group-hover:opacity-100 dark:bg-dark lg:invisible lg:absolute lg:top-[110%] lg:block lg:w-[250px] lg:p-4 lg:opacity-0 lg:shadow-lg lg:group-hover:visible lg:group-hover:top-full ${
-                                openIndex === index ? "block" : "hidden"
-                              }`}
-                            >
-                              {menuItem.submenu && menuItem.submenu.map((submenuItem, index) => (
-                                <Link
-                                  href={submenuItem.path || '/'}
-                                  key={index}
-                                  className="block rounded py-2.5 text-sm text-dark hover:text-primary dark:text-white/70 dark:hover:text-white lg:px-3"
-                                >
-                                  {submenuItem.title}
-                                </Link>
-                              ))}
-                            </div>
-                          </>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                </nav>
-              </div>
-              <div className="flex items-center justify-end pr-16 lg:pr-0">
-                <div>
-                  <ThemeToggler />
-                </div>
+                <ThemeToggler />
               </div>
             </div>
           </div>

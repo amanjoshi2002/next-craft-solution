@@ -56,6 +56,7 @@ module.exports = {
           dark: "#1E232E",
           light: "#F0F2F9",
         },
+        'neon-cyan': '#00fff7',
       },
 
       boxShadow: {
@@ -71,9 +72,19 @@ module.exports = {
         btn: "0px 1px 2px rgba(4, 10, 34, 0.15)",
         "btn-hover": "0px 1px 2px rgba(0, 0, 0, 0.15)",
         "btn-light": "0px 1px 2px rgba(0, 0, 0, 0.1)",
+        'neon': '0 0 24px 4px rgba(0,255,255,0.4)',
       },
       dropShadow: {
         three: "0px 5px 15px rgba(6, 8, 15, 0.05)",
+      },
+      fontFamily: {
+        futuristic: [
+          'Orbitron',
+          'Montserrat',
+          'ui-sans-serif',
+          'system-ui',
+          'sans-serif',
+        ],
       },
     },
   },
